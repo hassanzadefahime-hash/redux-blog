@@ -63,7 +63,7 @@ const BlogsList = () => {
       </div>
     );
   }
-
+  console.log(groups);
   return (
     <div className="w-full flex flex-col items-center gap-6">
 
@@ -105,6 +105,7 @@ const BlogsList = () => {
                   : "white",
             }}
           >
+            
             <img
               src={group.img}
               alt={group.name}
