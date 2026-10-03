@@ -1,15 +1,20 @@
-import { useSelector } from "react-redux"
-import { selectUserById } from "../../reducer/userSlice"
+import { useSelector } from "react-redux";
+import { selectUserById } from "../../features/user/userSlice";
 
-const ShowUser =({userId})=>{
-    const user = useSelector((state)=>selectUserById(state , userId))
-    return(
-        <p>
-            {/* {user.fullname} */}
+const ShowUser = ({ userId }) => {
+  const user = useSelector((state) =>
+    selectUserById(state, userId)
+  );
 
-            {user ? (<p className="text-gray-500"> این پست توسط {user.fullname} </p>) : (<p>ناشناس</p>)}
-        </p>
-    )
+  if (!user) {
+    return <span className="text-gray-500">ناشناس</span>;
+  }
 
-}
-export default ShowUser
+  return (
+    <span className="text-gray-500">
+      این پست توسط {user.fullname}
+    </span>
+  );
+};
+
+export default ShowUser;

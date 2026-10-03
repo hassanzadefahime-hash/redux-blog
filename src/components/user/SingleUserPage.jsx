@@ -1,49 +1,92 @@
-import { useSelector } from "react-redux"
-import { selectUserById } from "../../reducer/userSlice"
-import { useParams } from "react-router-dom"
-import { selectAllBlogs, selectUserBlog } from "../../reducer/blogSlice"
-import { useId, useMemo } from "react"
-import { createSelector } from "@reduxjs/toolkit"
-import { useGetBlogsQuery } from "../../api/apiSlice"
 
-const SingleUserPage =()=>{
+import { useMemo } from "react";
+import { useSelector } from "react-redux";
+import { Link, useParams } from "react-router-dom";
+import { createSelector } from "@reduxjs/toolkit";
 
-     const {userId} = useParams()
+import { selectUserById } from "../../features/user/userSlice";
+import { useGetBlogsQuery } from "../../api/apiSlice";
 
-     const user = useSelector(state => selectUserById (state,userId))
-    //  const blogs = useSelector((state)=>selectUserBlog(state , userId))
+const SingleUserPage = () => {
+  const { userId } = useParams();
 
-     
-    const selectUserBlogs = useMemo(()=>{
-        const emptyArray = []
+  const user = useSelector((state) =>
+    selectUserById(state, userId)
+  );
 
-        return createSelector(
-            (res)=>res.data ,
-            (res , userId) => userId,
-            (data , userId) => data?.filter(blog=> blog.user === userId )?? emptyArray
-        )
-    },[])
-    const {userBlogs} = useGetBlogsQuery(undefined ,({
-        selectFromResult: result => ({
-            ...result , 
-            userBlogs : selectUserBlogs(result , userId)
-        })
-    }))
-     
-    return(
-        <>
-        <h4>{user.fullname}</h4>
-        اثرات
-        {userBlogs.map((blog)=>
-        (
-            <h5 key={blog.id}>
+  const selectUserBlogs = useMemo(
+    () =>
+      createSelector(
+        [
+          (result) => result.data ?? [],
+          (_result, id) => id,
+        ],
+        (blogs, id) =>
+          blogs.filter((blog) => blog.user === id)
+      ),
+    []
+  );
+
+  const {
+    userBlogs = [],
+    isLoading,
+    isError,
+  } = useGetBlogsQuery(undefined, {
+    selectFromResult: (result) => ({
+      ...result,
+      userBlogs: selectUserBlogs(result, userId),
+    }),
+  });
+
+  if (!user) {
+    return (
+      <div className="mx-auto mt-10 text-center text-gray-500">
+        کاربر موردنظر پیدا نشد.
+      </div>
+    );
+  }
+
+  return (
+    <section className="mx-auto mt-10 w-full rounded-lg border border-gray-200 bg-white p-6 md:w-3/4">
+      <h2 className="mb-6 text-2xl font-bold">
+        {user.fullname}
+      </h2>
+
+      <h3 className="mb-4 text-lg font-semibold">
+        پست‌های نویسنده
+      </h3>
+
+      {isLoading ? (
+        <p className="text-gray-500">
+          در حال دریافت پست‌ها...
+        </p>
+      ) : isError ? (
+        <p className="text-red-500">
+          دریافت پست‌ها با خطا مواجه شد.
+        </p>
+      ) : userBlogs.length > 0 ? (
+        <ul className="flex flex-col gap-3">
+          {userBlogs.map((blog) => (
+            <li
+              key={blog.id}
+              className="rounded-lg border border-gray-200 p-3 transition hover:bg-gray-50"
+            >
+              <Link
+                to={`/blogs/${blog.id}`}
+                className="font-medium text-gray-700 hover:text-blue-600"
+              >
                 {blog.title}
-            </h5>
-        )
-        )}
-        
-        </>
-    )
-}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="text-gray-500">
+          این نویسنده هنوز پستی منتشر نکرده است.
+        </p>
+      )}
+    </section>
+  );
+};
 
-export default SingleUserPage
+export default SingleUserPage;

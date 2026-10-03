@@ -1,21 +1,10 @@
+import "./App.css";
 
-import './App.css'
-import BlogsList from './components/BlogsList'
-
+import BlogsList from "./components/blog/BlogsList.jsx";
 
 function App() {
-  
-
-  return (
-    <div className='flex flex-col'>
-      {/* <GroupsList /> */}
-      <BlogsList />
-    </div>
-    // <div>
-    //   <h1>Redux Blog</h1>
-    //   <p>App is working!</p>
-    // </div>
-  )
+return ( <div className="flex flex-col"> <BlogsList /> </div>
+);
 }
 
-export default App
+export default App;

@@ -1,17 +1,37 @@
-import { useGetGroupQuery } from "../../api/apiSlice"
+import { useGetGroupQuery } from "../../api/apiSlice";
 
+const ShowGroup = ({ groupId }) => {
+  const {
+    data: group,
+    isLoading,
+    isError,
+  } = useGetGroupQuery(groupId, {
+    skip: !groupId,
+  });
 
-const ShowGroup =({groupId})=>{
-    const {data :group} = useGetGroupQuery(groupId)
-    
-    
-    return(
-        
-            <p className="px-4 py-1.5 block w-fit rounded-full flex justify-center items-center font-bold" style={{color:group?.color , background:group?.bg  }}>
-             {group?.name} 
-        </p> 
-        
-       
-    )
-}
-export default ShowGroup
+  if (isLoading) {
+    return (
+      <span className="text-xs text-gray-400">
+        در حال بارگذاری...
+      </span>
+    );
+  }
+
+  if (isError || !group) {
+    return null;
+  }
+
+  return (
+    <p
+      className="flex w-fit items-center justify-center rounded-full px-4 py-1.5 font-bold"
+      style={{
+        color: group.color,
+        backgroundColor: group.bg,
+      }}
+    >
+      {group.name}
+    </p>
+  );
+};
+
+export default ShowGroup;

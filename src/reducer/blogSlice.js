@@ -1,101 +1,82 @@
-import { createAsyncThunk, createEntityAdapter, createSelector, createSlice, nanoid } from "@reduxjs/toolkit";
+import {
+  createAsyncThunk,
+  createEntityAdapter,
+  createSelector,
+  createSlice,
+  nanoid,
+} from "@reduxjs/toolkit";
 import axios from "axios";
-// import { sub } from "date-fns-jalali";
-// import { fetchUsers } from "./userSlice";
-
-// const initialState = {
-//   blogs: [
-//     {
-//       id: nanoid(),
-//       date: sub(new Date() , {minutes:10}).toISOString(),
-//       title: "اولین پست",
-//       content: "محتوای اولین پست",
-//       user:"A4P3AouNmLYne6UZn-6xc",
-//        reactions:{
-//         thumbsUp:0,
-//         hooray:0,
-//         heart:0,
-//         rocket:0,
-//         eyes:0
-//     }
-//     },
-//     {
-//       id: nanoid(),
-//       date: new Date().toISOString(),
-//       title: "دومین پست",
-//       content: "محتوای دومین پست ",
-//       user:"A4P3AouNmLYne6UZn-6xc",
-//       reactions:{
-//         thumbsUp:0,
-//         hooray:0,
-//         heart:0,
-//         rocket:0,
-//         eyes:0
-//     }
-//     },
-//   ],
-// };
 
 const blogAdapter = createEntityAdapter({
-  sortComparer :(a,b)=>b.date.localeCompare(a.date)
-})
-
-
-const initialState = blogAdapter.getInitialState({
-  status:"idle",
-  error:[]
-})
-
-
-// const initialState = {
-//   blogs: [],
-//   status: "idle",
-//   error: null,
-// };
-
-export const fetchblogs = createAsyncThunk("/blogs/fetchBlogs", async () => {
-  const responsive = await axios.get("http://localhost:9000/blogs");
-  return responsive.data;
+  sortComparer: (a, b) => b.date.localeCompare(a.date),
 });
 
+const initialState = blogAdapter.getInitialState({
+  status: "idle",
+  error: null,
+});
+
+// دریافت همه پست‌ها
+export const fetchBlogs = createAsyncThunk(
+  "blogs/fetchBlogs",
+  async () => {
+    const response = await axios.get(
+      "http://localhost:9000/blogs"
+    );
+
+    return response.data;
+  }
+);
+
+// افزودن پست
 export const addNewBlog = createAsyncThunk(
-  "/blofs/addNewBlog",
+  "blogs/addNewBlog",
   async (initialBlog) => {
-    const responsive = await axios.post(
+    const response = await axios.post(
       "http://localhost:9000/blogs",
-      initialBlog,
+      initialBlog
     );
-    return responsive.data;
-  },
+
+    return response.data;
+  }
 );
 
+// حذف پست
 export const deleteApiBlog = createAsyncThunk(
-  "/blogs/deleteApiBlog",
-  async (initialId) => {
-    await axios.delete(`http://localhost:9000/blogs/${initialId}`);
-    return initialId;
-  },
+  "blogs/deleteApiBlog",
+  async (blogId) => {
+    await axios.delete(
+      `http://localhost:9000/blogs/${blogId}`
+    );
+
+    return blogId;
+  }
 );
 
+// ویرایش پست
 export const updateApiBlog = createAsyncThunk(
-  "/blogs/updateApiBlog",
-  async (initialBlog) => {
-    const respone = await axios.put(
-      `http://localhost:9000/blogs/${initialBlog.id}`,
-      initialBlog,
+  "blogs/updateApiBlog",
+  async (updatedBlog) => {
+    const response = await axios.put(
+      `http://localhost:9000/blogs/${updatedBlog.id}`,
+      updatedBlog
     );
-    return respone.data;
-  },
+
+    return response.data;
+  }
 );
 
 const blogSlice = createSlice({
   name: "blogs",
-  initialState: initialState,
+
+  initialState,
+
   reducers: {
     blogAdded: {
       reducer(state, action) {
-        state.blogs.push(action.payload);
+        blogAdapter.addOne(state, action.payload);
       },
+
       prepare(userId, title, content) {
         return {
           payload: {
@@ -104,85 +85,107 @@ const blogSlice = createSlice({
             title,
             content,
             user: userId,
+            reactions: {
+              thumbsUp: 0,
+              hooray: 0,
+              heart: 0,
+              rocket: 0,
+              eyes: 0,
+            },
           },
         };
       },
     },
+
     blogUpdated: (state, action) => {
       const { id, title, content } = action.payload;
-      // const existBlog = state.blogs.find((blog) => blog.id === id);
 
-      const existBlog = state.entities[id]
-      if (existBlog) {
-        existBlog.title = title;
-        existBlog.content = content;
+      const existingBlog = state.entities[id];
+
+      if (existingBlog) {
+        existingBlog.title = title;
+        existingBlog.content = content;
       }
     },
+
     blogDeleted: (state, action) => {
-      const { id } = action.payload;
-      state.blogs = state.blogs.filter((blog) => blog.id !== id);
+      blogAdapter.removeOne(state, action.payload);
     },
+
     reactionAdded: (state, action) => {
       const { id, reaction } = action.payload;
-      // const existBlog = state.blogs.find((blog) => blog.id === id);
-      const existBlog = state.entities[id]
-      if (existBlog) {
-        existBlog.reactions[reaction]++;
+
+      const existingBlog = state.entities[id];
+
+      if (existingBlog) {
+        existingBlog.reactions[reaction] =
+          Number(existingBlog.reactions[reaction]) + 1;
       }
     },
   },
+
   extraReducers: (builder) => {
     builder
-      .addCase(fetchblogs.pending, (state, action) => {
+      // دریافت پست‌ها
+      .addCase(fetchBlogs.pending, (state) => {
         state.status = "loading";
+        state.error = null;
       })
-      .addCase(fetchblogs.fulfilled, (state, action) => {
-        ((state.status = "completed"),
-        //  (state.blogs = action.payload)
-        blogAdapter.upsertMany(state , action.payload)
-        );
+
+      .addCase(fetchBlogs.fulfilled, (state, action) => {
+        state.status = "completed";
+        state.error = null;
+
+        blogAdapter.setAll(state, action.payload);
       })
-      .addCase(fetchblogs.rejected, (state, action) => {
-        ((state.status = "failed"), (state.error = action.error.message));
+
+      .addCase(fetchBlogs.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.error.message;
       })
-      .addCase(addNewBlog.fulfilled , blogAdapter.addOne)
-      // .addCase(addNewBlog.fulfilled, (state, action) => {
-      //   // state.blogs.push(action.payload);
-      //   blogAdapter.addOne(action.payload)
-      // })
-      // .addCase(deleteApiBlog.fulfilled, (state, action) => {
-      //   state.blogs = state.blogs.filter((blog) => blog.id !== action.payload);
-      // })
-      .addCase(deleteApiBlog.fulfilled , blogAdapter.removeOne)
-      .addCase(updateApiBlog.fulfilled , blogAdapter.updateOne)
-      // .addCase(updateApiBlog.fulfilled, (state, action) => {
-        
-        
-      //   const updatedBlogIndex = state.blogs.findIndex(
-      //     (blog) => blog.id ===action.payload.id,
-      //   );
-      //   state.blogs[updatedBlogIndex] = action.payload;
-      // });
+
+      // افزودن
+      .addCase(addNewBlog.fulfilled, (state, action) => {
+        blogAdapter.addOne(state, action.payload);
+      })
+
+      // حذف
+      .addCase(deleteApiBlog.fulfilled, (state, action) => {
+        blogAdapter.removeOne(state, action.payload);
+      })
+
+      // ویرایش
+      .addCase(updateApiBlog.fulfilled, (state, action) => {
+        blogAdapter.upsertOne(state, action.payload);
+      });
   },
 });
 
-// export const selectAllBlogs = (state) => state.blogs.blogs;
-
-// export const selectBlogById = (state, blogId) =>
-//   state.blogs.blogs.find((blog) => blog.id === blogId);
-
+// Actions
 export const {
-  selectAll:selectAllBlogs,
-  selectById:selectBlogById,
-  selectIds:selectBlogIds
-} = blogAdapter.getSelectors(state => state.blogs)
+  blogAdded,
+  blogUpdated,
+  blogDeleted,
+  reactionAdded,
+} = blogSlice.actions;
 
+// Selectors
+export const {
+  selectAll: selectAllBlogs,
+  selectById: selectBlogById,
+  selectIds: selectBlogIds,
+} = blogAdapter.getSelectors(
+  (state) => state.blogs
+);
 
+// پست‌های یک کاربر
 export const selectUserBlog = createSelector(
-  [selectAllBlogs , (state , userId)=>userId],
-  (blogs , userId)=>blogs.filter(blog => blog.user === userId)
-)
+  [
+    selectAllBlogs,
+    (_state, userId) => userId,
+  ],
+  (blogs, userId) =>
+    blogs.filter((blog) => blog.user === userId)
+);
 
-export const { blogAdded, blogUpdated, blogDeleted, reactionAdded } =
-  blogSlice.actions;
 export default blogSlice.reducer;
