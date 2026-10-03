@@ -31,7 +31,7 @@ const users = usersState?.entities
 const handleSubmit = async (event) => {
 event.preventDefault();
 
-```
+
 const fullname = user.trim();
 
 if (!fullname || isAdding) {
@@ -39,16 +39,18 @@ if (!fullname || isAdding) {
 }
 
 try {
-  await addUser({
+  const result = await addUser({
     id: nanoid(),
     fullname,
   }).unwrap();
+
+  console.log("کاربر با موفقیت اضافه شد:", result);
 
   setUser("");
 } catch (error) {
   console.error("خطا در افزودن کاربر:", error);
 }
-```
+
 
 };
 
@@ -57,13 +59,13 @@ if (isDeleting) {
 return;
 }
 
-```
+
 try {
   await deleteUser(userId).unwrap();
 } catch (error) {
   console.error("خطا در حذف کاربر:", error);
 }
-```
+
 
 };
 

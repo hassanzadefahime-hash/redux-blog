@@ -1,9 +1,14 @@
+
 import { nanoid } from "@reduxjs/toolkit";
 import { useState } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 
-import { AllUsers } from "../../features/user/userSlice";
+import {
+  AllUsers,
+  useGetUsersQuery,
+} from "../../features/user/userSlice";
+
 import {
   useAddNewBlogMutation,
   useGetGroupsQuery,
@@ -16,14 +21,23 @@ const AddBlog = () => {
   const [group, setGroup] = useState("");
 
   const [addNewBlog, { isLoading }] = useAddNewBlogMutation();
+
   const { data: groups = [] } = useGetGroupsQuery();
+
+  // اجرای درخواست دریافت کاربران
+  const {
+    isLoading: isUsersLoading,
+    isError: isUsersError,
+  } = useGetUsersQuery();
 
   const navigate = useNavigate();
 
   const users = useSelector((state) => AllUsers(state));
 
   const canSave =
-    [title, content, userId, group].every(Boolean) && !isLoading;
+    [title, content, userId, group].every(Boolean) &&
+    !isLoading &&
+    !isUsersLoading;
 
   const onSubmitForm = async (e) => {
     e.preventDefault();
@@ -88,10 +102,13 @@ const AddBlog = () => {
               id="user"
               value={userId}
               onChange={(e) => setUserId(e.target.value)}
+              disabled={isUsersLoading}
               className="block md:w-1/2 w-full bg-white px-3 py-1 border border-gray-300"
             >
               <option value="" disabled>
-                انتخاب نویسنده
+                {isUsersLoading
+                  ? "در حال دریافت نویسندگان..."
+                  : "انتخاب نویسنده"}
               </option>
 
               {users.map((user) => (
@@ -100,6 +117,12 @@ const AddBlog = () => {
                 </option>
               ))}
             </select>
+
+            {isUsersError && (
+              <p className="text-red-500 text-sm">
+                دریافت نویسندگان با خطا مواجه شد.
+              </p>
+            )}
           </div>
 
           {/* گروه */}
@@ -155,3 +178,4 @@ const AddBlog = () => {
 };
 
 export default AddBlog;
+
