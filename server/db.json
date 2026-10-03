@@ -81,28 +81,28 @@
       "name": "رمان عاشقانه",
       "color": "#F52768",
       "bg": "#FCBBCF",
-      "img": "/images/one.png"
+      "img": "/one.png"
     },
     {
       "id": "2",
       "name": "رمان تاریخی",
       "color": "#943F00",
       "bg": "#FFD7B8",
-      "img": "/images/three.png"
+      "img": "/three.png"
     },
     {
       "id": "3",
       "name": "رمان تخیلی",
       "color": "#0050AB",
       "bg": "#B8D9FF",
-      "img": "/images/two.png"
+      "img": "/two.png"
     },
     {
       "id": "4",
       "name": "رمان ماجراجویی",
       "color": "#4A0078",
       "bg": "#F5E6FF",
-      "img": "/images/four.png"
+      "img": "/four.png"
     }
   ]
 }
